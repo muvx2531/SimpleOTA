@@ -26,6 +26,8 @@ public:
     explicit SimpleOTA(QWidget *parent = nullptr);
     ~SimpleOTA();
 
+    void checksum();
+
 
         QTcpSocket  *OTAsocket;
         QFile       File;

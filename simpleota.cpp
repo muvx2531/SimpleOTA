@@ -89,9 +89,7 @@ void SimpleOTA::onReadyRead()
         }
     }
     qDebug()<<"Line start = "<<OTAfile.LinerequestedStart<<"Line stop = "<<OTAfile.LinerequestedStop;
-
     if((OTAsocket != nullptr) && (BootloaderInstruction.size() !=0)){
-
 
         QByteArray package;
         qint64 linenumber=0;
@@ -106,10 +104,16 @@ void SimpleOTA::onReadyRead()
             //qDebug()<<linenumber<<"  "<<OTAfile.LinerequestedStart<<" "<<OTAfile.LinerequestedStop;
         }
 
-
-
-
        OTAsocket->write(package);
+
+       QString print;
+       print.append(QString::number(OTAfile.LineTotal));
+       print.append("   Line request = ");
+       print.append(QString::number(OTAfile.LinerequestedStart));
+       print.append(" to ");
+       print.append(QString::number(OTAfile.LinerequestedStop));
+       ui->Message->append(print);
+       ui->Message->moveCursor(QTextCursor::End);
        qDebug()<<package;
     }
 
@@ -121,6 +125,19 @@ void SimpleOTA::onReadyRead()
 void SimpleOTA::onConnected()
 {
     qDebug()<<"TCP connected";
+    ui->Message->setText("+++Connected+++");
+    if(BootloaderInstruction.size() != 0)
+    {
+        QString Total(QString::number(OTAfile.LineTotal));
+
+          QString sum(".Hex ready Total Line = ");
+          sum.append(Total);
+        ui->Message->append(sum);
+    }
+    else
+    {
+        ui->Message->append("\r\n!!! Please insert HEX !!!");
+    }
     //Interval->start(1000);
 }
 
@@ -140,12 +157,33 @@ void SimpleOTA::on_Disconnect_clicked()
 
 void SimpleOTA::on_StartProgram_clicked()
 {
+    char sumxor=0;
+    QByteArray Start("HEX=");
+    Start.append(QString::number(OTAfile.LineTotal));
+    Start.append("*");
 
+    for(quint16 i=0;i<Start.size();i++)
+    {
+        sumxor = static_cast<quint8>(Start.at(i))^sumxor;
+    }
+    char bLow,bHigh;
+    bLow = sumxor&0x0F;
+    bHigh= sumxor>>4;
+    if(bHigh > 9)bHigh = bHigh+0x37;
+    else bHigh = bHigh+0x30;
+    if(bLow > 9)bLow = bLow+0x37;
+    else bLow = bLow+0x30;
+    Start.append(bHigh);
+    Start.append(bLow);
+
+    OTAsocket->write(Start);
+    qDebug()<<Start<<" "<<sumxor;
 }
 
 void SimpleOTA::on_RUN_APP_clicked()
 {
-
+    QByteArray Start("RUN APPr\r\n");
+    OTAsocket->write(Start);
 }
 
 void SimpleOTA::on_actionOpen_triggered()
@@ -163,6 +201,8 @@ void SimpleOTA::on_actionOpen_triggered()
     else
     {
         QTextStream in(&File);
+        BootloaderInstruction.clear();
+        ui->Message->clear();
         BootloaderInstruction.append(in.readAll());
         OTAfile.LineTotal = 0;
         OTAfile.Lineincrement = 0;
@@ -175,7 +215,26 @@ void SimpleOTA::on_actionOpen_triggered()
 //       ui->Message->append(BootloaderInstruction);
 //        ui->Hexcode->clear();
 //        ui->Hexcode->append(BootloaderInstruction);
-        qDebug()<<"Data = "<<BootloaderInstruction.at(0)<<BootloaderInstruction.at(1)<<BootloaderInstruction.at(2);
+//        qDebug()<<"Data = "<<BootloaderInstruction.at(0)<<BootloaderInstruction.at(1)<<BootloaderInstruction.at(2);
         File.close();
+
+
+//        if(OTAsocket != nullptr)
+//        {
+//            if(OTAsocket->state() == QAbstractSocket::ConnectedState )
+//            {
+                ui->Message->setText("+++.Hex ready+++");
+                QString Total(QString::number(OTAfile.LineTotal));
+
+                  QString sum(".Hex ready Total Line = ");
+                  sum.append(Total);
+                ui->Message->append(sum);
+//            }
+//        }
     }
+}
+
+void SimpleOTA::checksum()
+{
+
 }

@@ -220,6 +220,13 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="ButtonClearAPP">
+             <property name="text">
+              <string>Clear APP2</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>

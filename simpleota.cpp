@@ -87,7 +87,9 @@ void SimpleOTA::onReadyRead()
             OTAfile.LinerequestedStart = static_cast<qint64>(object.value("startLine").toInt());
             OTAfile.LinerequestedStop = static_cast<qint64>(object.value("stopLine").toInt());
         }
+        qDebug()<<"Line start = "<<object.value("startLine").toInt()<<"Line stop = "<<object.value("stopLine").toInt();
     }
+
     qDebug()<<"Line start = "<<OTAfile.LinerequestedStart<<"Line stop = "<<OTAfile.LinerequestedStop;
     if((OTAsocket != nullptr) && (BootloaderInstruction.size() !=0)){
 
@@ -153,6 +155,8 @@ void SimpleOTA::on_Disconnect_clicked()
     ui->Connect->setEnabled(1);
     ui->IP->setEnabled(1);
     ui->TCP_Port->setEnabled(1);
+    ui->Message->clear();
+    qDebug()<<"on click TCP DIS connected";
 }
 
 void SimpleOTA::on_StartProgram_clicked()
@@ -237,4 +241,15 @@ void SimpleOTA::on_actionOpen_triggered()
 void SimpleOTA::checksum()
 {
 
+}
+
+void SimpleOTA::on_ButtonClearAPP_clicked()
+{
+    if(OTAsocket != nullptr)
+    {
+        if(OTAsocket->state() == QAbstractSocket::ConnectedState )
+        {
+            OTAsocket->write("{\"CMD\":\"DELETE APP2 EEPROM\"}");
+        }
+    }
 }
